@@ -5,46 +5,44 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Test weekly to catch dependency issues
     - cron: '0 18 * * 5'
 jobs:
   test-template:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         project_type: [cli]
         use_tokio: [true, false]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - name: Checkout template
+      - name: Checkout
         uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Install cargo-generate
-        run: cargo install cargo-generate
+      - name: Cache Cargo Registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ hashFiles('**/Cargo.toml') }}
+      - name: Install Tools
+        run: cargo install cargo-generate cargo-audit cargo-outdated
       - name: Generate project
-        run: |
-          cargo generate --path . \
-            --name test-${{ matrix.project_type }}-tokio-${{ matrix.use_tokio }} \
-            --define project_type=${{ matrix.project_type }} \
-            --define use_tokio=${{ matrix.use_tokio }} \
-            --silent
-      # Move generated project to avoid cargo workspace conflicts
-      - name: Test generated project
+        run: cargo generate --path . --name test-${{ matrix.project_type }}-tokio-${{ matrix.use_tokio }} --define project_type=${{ matrix.project_type }} --define use_tokio=${{ matrix.use_tokio }} --silent
+      - name: Verify project generated
+        run: test -d "test-${{ matrix.project_type }}-tokio-${{ matrix.use_tokio }}"
+      - name: Move and test project
         run: |
           PROJECT_NAME="test-${{ matrix.project_type }}-tokio-${{ matrix.use_tokio }}"
           mv $PROJECT_NAME ${{ runner.temp }}/
           cd ${{ runner.temp }}/$PROJECT_NAME
-
-          # Test compilation
-          cargo check --verbose
-          cargo build --verbose
-
-          # Test basic functionality
-          if [[ "${{ matrix.project_type }}" == "cli" ]]; then
-            cargo run -- --help
-            cargo run -- completions bash > /dev/null
-          fi
-
-          # Test formatting and linting
           cargo fmt -- --check
           cargo clippy -- -D warnings
+          cargo check --verbose
+          cargo build --verbose
+          if [ -e tests ] || ls src/*.rs | grep -q test; then cargo test --verbose; fi
+          cargo audit
+          cargo outdated || true
+          cargo run -- --help
+          if [[ "${{ matrix.project_type }}" == "cli" ]]; then cargo run -- completions bash > /dev/null; fi
+      - name: Success message
+        run: echo "🎉 Template successfully built and verified on ${{ matrix.os }} for ${{ matrix.project_type }} (Tokio=${{ matrix.use_tokio }})"

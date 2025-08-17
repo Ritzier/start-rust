@@ -1,6 +1,6 @@
 [template]
 cargo_generate_version = ">=0.20.0"
-ignore = ["hooks", "*.md"]
+ignore = ["hooks", "*.md", ".github"]
 
 [placeholders]
 project_type = { type = "string", prompt = "Choose project type?", choices = [
