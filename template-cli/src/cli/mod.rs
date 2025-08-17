@@ -16,7 +16,7 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub{% if use_tokio -%} async{% endif -%} fn run(self) -> Result<()> {
+    pub {% if use_tokio -%} async {% endif -%} fn run(self) -> Result<()> {
         match self.command {
             Command::Run(_opts) => {}
 
