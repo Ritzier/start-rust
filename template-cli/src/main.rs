@@ -1,7 +1,7 @@
 use std::env;
 
 use clap::Parser;
-use rust_cli_template::{Cli, Result};
+use {{project-name | snake_case}}::{Cli, Result};
 
 {% if use_tokio -%}#[tokio::main]
 async {% endif -%}fn main() -> Result<()> {
