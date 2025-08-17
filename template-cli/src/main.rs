@@ -24,5 +24,5 @@ async {% endif -%}fn main() -> Result<()> {
     // Setup logger
     let _verbose = args.verbose();
 
-    args.run(){% if use_tokio -%}.await{% endif -%}
+    args.run(){% if use_tokio -%}.await{%endif%}
 }
