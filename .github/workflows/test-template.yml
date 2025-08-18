@@ -8,7 +8,7 @@ on:
     - cron: '0 18 * * 5'
 jobs:
   test-template:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         project_type: [cli]
