@@ -5,7 +5,6 @@ ignore = ["hooks", "*.md", ".github"]
 [placeholders]
 project_type = { type = "string", prompt = "Choose project type?", choices = [
   "cli",
-  # "tui", # TODO:
 ], default = "cli" }
 
 [hooks]
